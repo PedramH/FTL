@@ -1,0 +1,23 @@
+OBJECTS = \
+$(OBJECTS_DIR)/kinematicCloud.o\
+$(OBJECTS_DIR)/frontTrackingCloud.o\
+$(OBJECTS_DIR)/defineBasicKinematicParcel.o\
+$(OBJECTS_DIR)/makeBasicKinematicParcelSubmodels.o\
+$(OBJECTS_DIR)/turbulentIntensityKineticEnergyInletFvPatchSymmTensorField.o\
+$(OBJECTS_DIR)/defineBasicFrontTrackingParcel.o\
+$(OBJECTS_DIR)/makeBasicFrontTrackingParcelSubmodels.o\
+$(OBJECTS_DIR)/patchInteractionData.o\
+$(OBJECTS_DIR)/patchInteractionDataList.o\
+$(OBJECTS_DIR)/kinematicParcelInjectionData.o\
+$(OBJECTS_DIR)/kinematicParcelInjectionDataIO.o\
+$(OBJECTS_DIR)/kinematicParcelInjectionDataIOList.o\
+$(OBJECTS_DIR)/patchInjectionBase.o\
+$(OBJECTS_DIR)/mykinematicParcelInjectionData.o\
+$(OBJECTS_DIR)/mykinematicParcelInjectionDataIO.o\
+$(OBJECTS_DIR)/mykinematicParcelInjectionDataIOList.o\
+$(OBJECTS_DIR)/makeIntegrationSchemes.o\
+$(OBJECTS_DIR)/phaseProperties.o\
+$(OBJECTS_DIR)/phasePropertiesIO.o\
+$(OBJECTS_DIR)/phasePropertiesList.o\
+$(OBJECTS_DIR)/cloudSolution.o\
+$(OBJECTS_DIR)/makeAveragingMethods.o

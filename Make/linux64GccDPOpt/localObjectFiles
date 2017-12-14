@@ -1,0 +1,23 @@
+LOCAL_OBJECTS = \
+kinematicCloud.o\
+frontTrackingCloud.o\
+defineBasicKinematicParcel.o\
+makeBasicKinematicParcelSubmodels.o\
+turbulentIntensityKineticEnergyInletFvPatchSymmTensorField.o\
+defineBasicFrontTrackingParcel.o\
+makeBasicFrontTrackingParcelSubmodels.o\
+patchInteractionData.o\
+patchInteractionDataList.o\
+kinematicParcelInjectionData.o\
+kinematicParcelInjectionDataIO.o\
+kinematicParcelInjectionDataIOList.o\
+patchInjectionBase.o\
+mykinematicParcelInjectionData.o\
+mykinematicParcelInjectionDataIO.o\
+mykinematicParcelInjectionDataIOList.o\
+makeIntegrationSchemes.o\
+phaseProperties.o\
+phasePropertiesIO.o\
+phasePropertiesList.o\
+cloudSolution.o\
+makeAveragingMethods.o

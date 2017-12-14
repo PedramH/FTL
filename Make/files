@@ -1,0 +1,70 @@
+PARCELS=parcels
+BASEPARCELS=$(PARCELS)/baseClasses
+DERIVEDPARCELS=$(PARCELS)/derived
+
+CLOUDS=clouds
+BASECLOUDS=$(CLOUDS)/baseClasses
+DERIVEDCLOUDS=$(CLOUDS)/derived
+
+
+/* Cloud base classes */
+$(BASECLOUDS)/kinematicCloud/kinematicCloud.C
+$(BASECLOUDS)/frontTrackingCloud/frontTrackingCloud.C
+
+
+
+/* kinematic parcel sub-models */
+KINEMATICPARCEL=$(DERIVEDPARCELS)/basicKinematicParcel
+$(KINEMATICPARCEL)/defineBasicKinematicParcel.C
+$(KINEMATICPARCEL)/makeBasicKinematicParcelSubmodels.C
+compatibilityFvPatchFields/turbulentIntensityKineticEnergyInlet/turbulentIntensityKineticEnergyInletFvPatchSymmTensorField.C 
+
+
+/* frontTracking parcel sub-models */
+FRONTTRACKINGPARCEL=$(DERIVEDPARCELS)/basicFrontTrackingParcel
+$(FRONTTRACKINGPARCEL)/defineBasicFrontTrackingParcel.C
+$(FRONTTRACKINGPARCEL)/makeBasicFrontTrackingParcelSubmodels.C
+
+/*
+FD=submodels/FrontTracking/FrontAnalyzing/FrontDynamic
+$(FD)/insertParticles.C
+*/
+
+
+
+/* bolt-on models */
+
+
+submodels/Kinematic/PatchInteractionModel/LocalInteraction/patchInteractionData.C
+submodels/Kinematic/PatchInteractionModel/LocalInteraction/patchInteractionDataList.C
+
+KINEMATICINJECTION=submodels/Kinematic/InjectionModel
+$(KINEMATICINJECTION)/KinematicLookupTableInjection/kinematicParcelInjectionData.C
+$(KINEMATICINJECTION)/KinematicLookupTableInjection/kinematicParcelInjectionDataIO.C
+$(KINEMATICINJECTION)/KinematicLookupTableInjection/kinematicParcelInjectionDataIOList.C
+$(KINEMATICINJECTION)/PatchInjection/patchInjectionBase.C
+$(KINEMATICINJECTION)/MyKinematicLookupTableInjection/mykinematicParcelInjectionData.C
+$(KINEMATICINJECTION)/MyKinematicLookupTableInjection/mykinematicParcelInjectionDataIO.C
+$(KINEMATICINJECTION)/MyKinematicLookupTableInjection/mykinematicParcelInjectionDataIOList.C
+
+
+
+/* integration schemes */
+IntegrationScheme/makeIntegrationSchemes.C
+
+
+/* phase properties */
+phaseProperties/phaseProperties/phaseProperties.C
+phaseProperties/phaseProperties/phasePropertiesIO.C
+phaseProperties/phasePropertiesList/phasePropertiesList.C
+
+
+/* additional helper classes */
+clouds/Templates/KinematicCloud/cloudSolution/cloudSolution.C
+
+
+/* averaging methods */
+submodels/MPPIC/AveragingMethods/makeAveragingMethods.C
+
+
+LIB = $(FOAM_USER_LIBBIN)/liblagrangianIntermediateFTLaminarPedram

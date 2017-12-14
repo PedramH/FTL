@@ -1,0 +1,10 @@
+PARCELS=parcels
+BASEPARCELS=$(PARCELS)/baseClasses
+DERIVEDPARCELS=$(PARCELS)/derived
+CLOUDS=clouds
+BASECLOUDS=$(CLOUDS)/baseClasses
+DERIVEDCLOUDS=$(CLOUDS)/derived
+KINEMATICPARCEL=$(DERIVEDPARCELS)/basicKinematicParcel
+FRONTTRACKINGPARCEL=$(DERIVEDPARCELS)/basicFrontTrackingParcel
+KINEMATICINJECTION=submodels/Kinematic/InjectionModel
+LIB = $(FOAM_USER_LIBBIN)/liblagrangianIntermediateFTLaminarPedram

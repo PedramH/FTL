@@ -1,0 +1,23 @@
+DEPENDENCIES = \
+$(BASECLOUDS)/kinematicCloud/kinematicCloud.dep\
+$(BASECLOUDS)/frontTrackingCloud/frontTrackingCloud.dep\
+$(KINEMATICPARCEL)/defineBasicKinematicParcel.dep\
+$(KINEMATICPARCEL)/makeBasicKinematicParcelSubmodels.dep\
+compatibilityFvPatchFields/turbulentIntensityKineticEnergyInlet/turbulentIntensityKineticEnergyInletFvPatchSymmTensorField.dep\
+$(FRONTTRACKINGPARCEL)/defineBasicFrontTrackingParcel.dep\
+$(FRONTTRACKINGPARCEL)/makeBasicFrontTrackingParcelSubmodels.dep\
+submodels/Kinematic/PatchInteractionModel/LocalInteraction/patchInteractionData.dep\
+submodels/Kinematic/PatchInteractionModel/LocalInteraction/patchInteractionDataList.dep\
+$(KINEMATICINJECTION)/KinematicLookupTableInjection/kinematicParcelInjectionData.dep\
+$(KINEMATICINJECTION)/KinematicLookupTableInjection/kinematicParcelInjectionDataIO.dep\
+$(KINEMATICINJECTION)/KinematicLookupTableInjection/kinematicParcelInjectionDataIOList.dep\
+$(KINEMATICINJECTION)/PatchInjection/patchInjectionBase.dep\
+$(KINEMATICINJECTION)/MyKinematicLookupTableInjection/mykinematicParcelInjectionData.dep\
+$(KINEMATICINJECTION)/MyKinematicLookupTableInjection/mykinematicParcelInjectionDataIO.dep\
+$(KINEMATICINJECTION)/MyKinematicLookupTableInjection/mykinematicParcelInjectionDataIOList.dep\
+IntegrationScheme/makeIntegrationSchemes.dep\
+phaseProperties/phaseProperties/phaseProperties.dep\
+phaseProperties/phaseProperties/phasePropertiesIO.dep\
+phaseProperties/phasePropertiesList/phasePropertiesList.dep\
+clouds/Templates/KinematicCloud/cloudSolution/cloudSolution.dep\
+submodels/MPPIC/AveragingMethods/makeAveragingMethods.dep

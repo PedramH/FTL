@@ -1,0 +1,23 @@
+SOURCE = \
+$(BASECLOUDS)/kinematicCloud/kinematicCloud.C\
+$(BASECLOUDS)/frontTrackingCloud/frontTrackingCloud.C\
+$(KINEMATICPARCEL)/defineBasicKinematicParcel.C\
+$(KINEMATICPARCEL)/makeBasicKinematicParcelSubmodels.C\
+compatibilityFvPatchFields/turbulentIntensityKineticEnergyInlet/turbulentIntensityKineticEnergyInletFvPatchSymmTensorField.C\
+$(FRONTTRACKINGPARCEL)/defineBasicFrontTrackingParcel.C\
+$(FRONTTRACKINGPARCEL)/makeBasicFrontTrackingParcelSubmodels.C\
+submodels/Kinematic/PatchInteractionModel/LocalInteraction/patchInteractionData.C\
+submodels/Kinematic/PatchInteractionModel/LocalInteraction/patchInteractionDataList.C\
+$(KINEMATICINJECTION)/KinematicLookupTableInjection/kinematicParcelInjectionData.C\
+$(KINEMATICINJECTION)/KinematicLookupTableInjection/kinematicParcelInjectionDataIO.C\
+$(KINEMATICINJECTION)/KinematicLookupTableInjection/kinematicParcelInjectionDataIOList.C\
+$(KINEMATICINJECTION)/PatchInjection/patchInjectionBase.C\
+$(KINEMATICINJECTION)/MyKinematicLookupTableInjection/mykinematicParcelInjectionData.C\
+$(KINEMATICINJECTION)/MyKinematicLookupTableInjection/mykinematicParcelInjectionDataIO.C\
+$(KINEMATICINJECTION)/MyKinematicLookupTableInjection/mykinematicParcelInjectionDataIOList.C\
+IntegrationScheme/makeIntegrationSchemes.C\
+phaseProperties/phaseProperties/phaseProperties.C\
+phaseProperties/phaseProperties/phasePropertiesIO.C\
+phaseProperties/phasePropertiesList/phasePropertiesList.C\
+clouds/Templates/KinematicCloud/cloudSolution/cloudSolution.C\
+submodels/MPPIC/AveragingMethods/makeAveragingMethods.C
