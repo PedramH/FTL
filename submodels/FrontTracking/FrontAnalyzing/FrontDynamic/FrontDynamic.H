@@ -534,13 +534,13 @@ public:
 
         inline void mapFrontToParcel();
 
-	inline void calculatingThePosInDomain();
+	    inline void calculatingThePosInDomain();
 
-	inline Foam::vector calcThePositionInDomain( point pos);
+	    inline Foam::vector calcThePositionInDomain( point pos);
 
-	inline void calculatingThePosInDomainOfPoints();
+	    inline void calculatingThePosInDomainOfPoints();
 
-	inline void calculatingTheCentrePosInDomainOfElements();
+	    inline void calculatingTheCentrePosInDomainOfElements();
 
         inline void mapParcelToFront();
 
@@ -565,40 +565,40 @@ public:
                                    scalar maxAspectRatio, scalar& s1, scalar& s2,
                                    scalar& s3, label& n1, label& n2, label& n3);
 
-	inline bool isElementRefined(elementInfo el, scalar minEdge, scalar maxEdge, scalar maxAspectRatio,
+	    inline bool isElementRefined(elementInfo el, scalar minEdge, scalar maxEdge, scalar maxAspectRatio,
                                      scalar& s1, scalar& s2, scalar& s3, label& n1, label& n2, label& n3);
 
-	inline void frontCoarsening(DynamicList<pointData>& ptDataList, DynamicList<elementInfo>& elInfoList,
+	    inline void frontCoarsening(DynamicList<pointData>& ptDataList, DynamicList<elementInfo>& elInfoList,
                                                                    scalar minEdge, scalar maxEdge, scalar maxAspectRatio);
 
-	inline void frontRefining( DynamicList<pointData>& ptDataList, DynamicList<elementInfo>& elInfoList,
+	    inline void frontRefining( DynamicList<pointData>& ptDataList, DynamicList<elementInfo>& elInfoList,
                                    scalar minEdge, scalar maxEdge, scalar maxAspectRatio);
 
-	inline void TSUR3D( label repeatNum, DynamicList<pointData>& ptDataList, DynamicList<elementInfo>& elInfoList);
+	    inline void TSUR3D( label repeatNum, DynamicList<pointData>& ptDataList, DynamicList<elementInfo>& elInfoList);
 
-	inline void volumeConservingSmoothingIII( label repeatNum, DynamicList<pointData>& ptDataList, DynamicList<elementInfo>& elInfoList);
+	    inline void volumeConservingSmoothingIII( label repeatNum, DynamicList<pointData>& ptDataList, DynamicList<elementInfo>& elInfoList);
 
-	inline void volumeConservingSmoothingIV( label repeatNum, DynamicList<pointData>& ptDataList, DynamicList<elementInfo>& elInfoList);
+	    inline void volumeConservingSmoothingIV( label repeatNum, DynamicList<pointData>& ptDataList, DynamicList<elementInfo>& elInfoList);
 
-	inline Foam::vector smoothTo( pointData currentPt);
+	    inline Foam::vector smoothTo( pointData currentPt);
 
-	inline Foam::scalar calcBubbleVolume( DynamicList<elementInfo> eL);
+    	inline Foam::scalar calcBubbleVolume( DynamicList<elementInfo> eL);
 
-	inline Foam::scalar calcBubbleSurface( DynamicList<elementInfo> eL);
+	   inline Foam::scalar calcBubbleSurface( DynamicList<elementInfo> eL);
 
-	inline Foam::scalar PeskinD(scalar r);
+	   inline Foam::scalar PeskinD(scalar r);
 
-	inline Foam::scalar windowFunc(vector del, scalar h);
+	   inline Foam::scalar windowFunc(vector del, scalar h);
 
-	inline Foam::scalar windowFuncBar(vector del, scalar h, List<scalar> beta);
+	   inline Foam::scalar windowFuncBar(vector del, scalar h, List<scalar> beta);
 
-	inline Foam::scalar mPQR(vector del, scalar h, label p, label q, label r);
+	   inline Foam::scalar mPQR(vector del, scalar h, label p, label q, label r);
 
-	inline Foam::vector calcTheSurfaceAreaAtpoint( pointData ptD);
+	   inline Foam::vector calcTheSurfaceAreaAtpoint( pointData ptD);
 
-        inline Foam::vector calcSurfaceTensionForceAtpoint( pointData ptD);
+       inline Foam::vector calcSurfaceTensionForceAtpoint( pointData ptD);
 
-	inline Foam::vector calcElementSurfaceArea( elementInfo elD);
+	   inline Foam::vector calcElementSurfaceArea( elementInfo elD);
 
 	static string getLineNoComment(IFstream& is)
 	{

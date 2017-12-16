@@ -29,6 +29,879 @@ License
 using namespace Foam::constant;
 
 // * * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * //
+
+//--------------------------------------------------------------------------
+//-----------------------------cloudCleaning--------------------------------
+//--------------------------------------------------------------------------
+template<class CloudType>
+inline void Foam::FrontDynamic<CloudType>::cloudCleaning()
+{
+   forAllIter(typename CloudType, this->owner(), iter1)
+   {
+       parcelType& p1 = iter1();
+       this->owner().deleteParticle( p1);
+   }
+   /*
+   forAllIter(typename CloudType, this->owner(), iter1)
+   {
+       //parcelType& p1 = iter1();
+       this->owner().deleteParticle( iter1());
+   }
+   */
+    Info << "\n---------> At the time: " << this->owner().db().time().value()
+         <<" , Now all front points is deleting ....... " << endl;
+}
+
+
+//--------------------------------------------------------------------------
+//-----------------------------mapFrontToParcel--------------------------------
+//--------------------------------------------------------------------------
+template<class CloudType>
+inline void Foam::FrontDynamic<CloudType>::mapFrontToParcel()
+{
+    Info << "\n---------> At the time: " << this->owner().db().time().value()
+         <<" , Now all front points is mapping to the parcels ....... " << endl;
+
+    const fvMesh& mesh = this->owner().mesh();
+
+    // insert correctly the particles................
+    if (Pstream::parRun())
+    {//2
+
+        forAll(bDataL_,bDI)
+        {//10
+            DynamicList<pointData> tempPL = bDataL_[bDI].pL;
+
+	    // Determine the front point position and owner cell,
+	    // tetFace and tetPt
+	    label cellI = -1;
+	    label tetFaceI = -1;
+	    label tetPtI = -1;
+	    vector pos = vector::zero;
+
+	    label posInList = -1;
+
+	    forAll(tempPL, pointI)
+	    {//3
+		pointData ptD = tempPL[pointI];
+		pos = ptD.posInDomain;
+		this->owner().mesh().findCellFacePt
+		(
+		    pos,
+		    cellI,
+		    tetFaceI,
+		    tetPtI
+		);
+
+	        // gather cellI from all proc
+		labelList LcellI(Pstream::nProcs());
+		LcellI[Pstream::myProcNo()] = cellI;
+		Pstream::gatherList(LcellI);
+    		Pstream::scatterList(LcellI);
+
+	        // gather tetFaceI from all proc
+    		labelList LtetFaceI(Pstream::nProcs());
+    		LtetFaceI[Pstream::myProcNo()] = tetFaceI;
+    		Pstream::gatherList(LtetFaceI);
+    		Pstream::scatterList(LtetFaceI);
+
+	        // gather tetPtI from all proc
+    		labelList LtetPtI(Pstream::nProcs());
+    		LtetPtI[Pstream::myProcNo()] = tetPtI;
+    		Pstream::gatherList(LtetPtI);
+    		Pstream::scatterList(LtetPtI);
+
+	    	forAll(LcellI,LcI)
+	   	{
+	     	    if( LcellI[LcI] > -1 && LtetFaceI[LcI] > -1 )
+	            {
+	                posInList = LcI;
+	                break;
+	            }
+	        }
+
+		if (  Pstream::myProcNo() == posInList )
+		{
+	             parcelType* pPtr = new parcelType(mesh, pos, LcellI[posInList], LtetFaceI[posInList], LtetPtI[posInList]);
+	             //Check/set new parcel thermo properties
+	             this->owner().setParcelThermoProperties(*pPtr, 0.0);
+	             //Apply correction to velocity for 2-D cases
+	             meshTools::constrainDirection(this->owner().mesh(), this->owner().mesh().solutionD(), pPtr->U());
+	             //Check/set new parcel injection properties
+	             this->owner().checkParcelProperties(*pPtr, 0.0, false);
+	             //Apply correction to velocity for 2-D cases
+	             meshTools::constrainDirection
+		     (
+			 this->owner().mesh(),
+			 this->owner().mesh().solutionD(),
+			 pPtr->U()
+		     );
+		     pPtr->currentIndex() = ptD.currentIndex;
+   	             pPtr->bubbleIndex() = bDI;
+		     pPtr->shadowPos() = ptD.currentPoint;
+		     this->owner().addParticle(pPtr);
+		 }
+	    }//3
+
+        }//10
+    }//2
+
+    if (!Pstream::parRun())
+    {//5
+        forAll(bDataL_,bDI)
+        {//10
+	    DynamicList<pointData> tempPL = bDataL_[bDI].pL;
+
+	    // Determine the front point position and owner cell,
+	    // tetFace and tetPt
+	    label cellI = -1;
+	    label tetFaceI = -1;
+	    label tetPtI = -1;
+	    vector pos = vector::zero;
+
+	    forAll(tempPL, pointI)
+	    {//4
+		pointData ptD = tempPL[pointI];
+		pos = ptD.posInDomain;
+		this->owner().mesh().findCellFacePt
+		(
+		    pos,
+		    cellI,
+		    tetFaceI,
+		    tetPtI
+		);
+
+		if ( cellI > -1)
+		{
+                     //Info << " AF $$$$$$$$$$ cellI/tetFaceI/tetPtI " << cellI << ' ' << tetFaceI << ' ' << tetPtI << endl;
+	            parcelType* pPtr = new parcelType(mesh, pos, cellI, tetFaceI, tetPtI);
+	    	    //Check/set new parcel thermo properties
+	            this->owner().setParcelThermoProperties(*pPtr, 0.0);
+	            //Apply correction to velocity for 2-D cases
+	            meshTools::constrainDirection(this->owner().mesh(), this->owner().mesh().solutionD(), pPtr->U());
+		    // Check/set new parcel injection properties
+		    this->owner().checkParcelProperties(*pPtr, 0.0, false);
+		    // Apply correction to velocity for 2-D cases
+		    meshTools::constrainDirection
+		    (
+		        this->owner().mesh(),
+			this->owner().mesh().solutionD(),
+			pPtr->U()
+		    );
+		    pPtr->currentIndex() = ptD.currentIndex;
+   	            pPtr->bubbleIndex() = bDI;
+		    pPtr->shadowPos() = ptD.currentPoint;
+		    this->owner().addParticle(pPtr);
+		 }
+	    }//4
+        }//10
+    }//5
+    // insert correctly the particles................
+}
+//--------------------------------------------------------------------------
+//--------------------------------calculatingThePosInDomain-----------------
+//--------------------------------------------------------------------------
+template<class CloudType>
+inline void Foam::FrontDynamic<CloudType>::calculatingThePosInDomain()
+{
+    calculatingThePosInDomainOfPoints();
+    calculatingTheCentrePosInDomainOfElements();
+}
+
+//note: func to calculate the position in domain.
+template<class CloudType>
+inline Foam::vector Foam::FrontDynamic<CloudType>::calcThePositionInDomain( point pos)
+{
+    vector posInDomain;
+
+    if( periodicalOption_ == "rotationalPeriodicalInCurvedDuct")
+    {//0
+	rCentre_.z() = pos.z();
+        vector rp = pos - rCentre_;
+	scalar ptTheta = acos( rp.x()/mag(rp));
+	scalar ptThetaInDomain = 0.0;
+	if( rp.y() >= 0 )
+	{
+	    ptThetaInDomain = ptTheta - thetaP_ * floor(ptTheta/thetaP_);
+	}
+	else if( rp.y() < 0 )
+	{
+	    ptTheta = mathematical::twoPi - ptTheta;
+	    ptThetaInDomain = ptTheta - thetaP_ * floor(ptTheta/thetaP_);
+	}
+	// calculating the posInDoamain
+	posInDomain.x() = mag(rp) * cos(ptThetaInDomain);
+	posInDomain.y() = mag(rp) * sin(ptThetaInDomain);
+	posInDomain.z() = pos.z();
+        return posInDomain;
+    }//0
+    else if( periodicalOption_ == "translationalPeriodicalInCurvedDuct")
+    {
+	rCentre_.z() = pos.z();
+        vector rp = pos - rCentre_;
+	// calculating the posInDoamain
+	posInDomain = pos;
+	posInDomain.z() = rp.z() - tPLength_ * floor(rp.z()/tPLength_);
+        return posInDomain;
+    }
+    else if( periodicalOption_ == "combinedRotationalPeriodicalInCurvedDuct" || periodicalOption_ == "combinedTranslationalPeriodicalInCurvedDuct" )
+    {
+	rCentre_.z() = pos.z();
+        vector rp = pos - rCentre_;
+	scalar ptTheta = acos( rp.x()/mag(rp));
+	scalar ptThetaInDomain = 0.0;
+	if( rp.y() >= 0 )
+	{
+	    ptThetaInDomain = ptTheta - thetaP_ * floor(ptTheta/thetaP_);
+	}
+	else if( rp.y() < 0 )
+	{
+	    ptTheta = mathematical::twoPi - ptTheta;
+	    ptThetaInDomain = ptTheta - thetaP_ * floor(ptTheta/thetaP_);
+	}
+	// calculating the posInDoamain
+	posInDomain.x() = mag(rp) * cos(ptThetaInDomain);
+	posInDomain.y() = mag(rp) * sin(ptThetaInDomain);
+        // this is done for the translationalPeriodical part
+	posInDomain.z() = rp.z() - tPLength_ * floor(rp.z()/tPLength_);
+        return posInDomain;
+    }
+    else if( periodicalOption_ == "straightDuctPeriodical")
+    {
+	// calculating the posInDoamain
+	posInDomain = pos;
+	posInDomain.z() = pos.z() - sDPLength_ * floor(pos.z()/sDPLength_);
+        return posInDomain;
+    }
+    else if( periodicalOption_ == "none")
+    {
+	// calculating the posInDoamain
+	posInDomain = pos;
+        return posInDomain;
+    }
+    else
+    {
+        FatalErrorIn ("inline Foam::vector Foam::FrontDynamic<CloudType>::calcThePositionInDomain( point pos)")
+            << "you should choose periodicalOption correctly" << nl
+            << abort(FatalError);
+    }
+}
+
+//note: func to calculate the posInDomain of all points.
+template<class CloudType>
+inline void Foam::FrontDynamic<CloudType>::calculatingThePosInDomainOfPoints()
+{
+    Info <<"\n---------> At the time: " << this->owner().db().time().value()
+         <<" , Now all front point locations is mapping to the domain ....... " << endl;
+    forAll(bDataL_,bDI)
+    {//1
+        DynamicList<pointData>& pL = bDataL_[bDI].pL;
+	forAll(pL,pI)
+	{//2
+	    point pos = pL[pI].currentPoint;
+            pL[pI].posInDomain = calcThePositionInDomain(pos);
+        }//2
+    }//1
+}
+
+//note: func to calculate the posInDomain of all points.
+template<class CloudType>
+inline void Foam::FrontDynamic<CloudType>::calculatingTheCentrePosInDomainOfElements()
+{
+    Info << "\n---------> At the time: " << this->owner().db().time().value()
+         <<" , Now all front element centres is mapping to the domain ....... " << endl;
+
+    forAll(bDataL_,bDI)
+    {//1
+        DynamicList<pointData>& pL = bDataL_[bDI].pL;
+	DynamicList<elementInfo>& eL = bDataL_[bDI].eL;
+	forAll(eL,eI)
+	{//2
+	    label p1I = eL[eI].pointIndex[0];
+	    label p2I = eL[eI].pointIndex[1];
+	    label p3I = eL[eI].pointIndex[2];
+	    point pos = (pL[p1I].currentPoint + pL[p2I].currentPoint + pL[p3I].currentPoint)/3.0;
+            eL[eI].centrePosInDomain = calcThePositionInDomain(pos);
+        }//2
+    }//1
+}
+//--------------------------------------------------------------------------
+//--------------------------------mapParcelToFront--------------------------
+//--------------------------------------------------------------------------
+template<class CloudType>
+inline void Foam::FrontDynamic<CloudType>::mapParcelToFront()
+{
+    Info << "\n---------> At the time: " << this->owner().db().time().value()
+         <<" , Now all parcels is mapping to the front ....... " << endl;
+
+    if (Pstream::parRun())
+    {//2
+	DynamicList<label>  myTranferLabelList;
+	DynamicList<label>  myTranferBLabelList;
+	DynamicList<vector> myTranferPointList;
+
+	forAllIter(typename CloudType, this->owner(), iter1)
+	{
+	    parcelType& p1 = iter1();
+	    myTranferLabelList.append( p1.currentIndex());
+	    myTranferBLabelList.append( p1.bubbleIndex());
+	    myTranferPointList.append( p1.shadowPos());
+	}
+
+	DynamicList<label>  totalTranferLabelList;
+	DynamicList<label>  totalTranferBLabelList;
+	DynamicList<vector> totalTranferVectorList;
+
+	// gather/scatter for myTranferLabelList
+	List<DynamicList<label> > allLL(Pstream::nProcs());
+	allLL[Pstream::myProcNo()] = myTranferLabelList;
+	Pstream::gatherList(allLL);
+	Pstream::scatterList(allLL);
+	// gather/scatter for myTranferBLabelList
+	List<DynamicList<label> > allBLL(Pstream::nProcs());
+	allBLL[Pstream::myProcNo()] = myTranferBLabelList;
+	Pstream::gatherList(allBLL);
+	Pstream::scatterList(allBLL);
+	// gather/scatter for myTranferPointList
+	List<DynamicList<vector> > allVL(Pstream::nProcs());
+	allVL[Pstream::myProcNo()] = myTranferPointList;
+	Pstream::gatherList(allVL);
+	Pstream::scatterList(allVL);
+
+	// preparing the totalTranferLabelList & totalTranferVectorList
+	forAll(allBLL,BLI)
+	{
+	    DynamicList<label> tempLL = allLL[BLI];
+	    DynamicList<label> tempBLL = allBLL[BLI];
+	    DynamicList<vector> tempVL = allVL[BLI];
+
+	    forAll(tempBLL,tBLI)
+	    {
+		totalTranferLabelList.append(tempLL[tBLI]);
+		totalTranferBLabelList.append(tempBLL[tBLI]);
+		totalTranferVectorList.append(tempVL[tBLI]);
+	    }
+	}
+
+	// updating the pL
+	forAll(totalTranferBLabelList,tTBLI)
+	{
+            label bubbleDI = totalTranferBLabelList[tTBLI];
+            DynamicList<pointData>& pL = bDataL_[bubbleDI].pL;
+
+	    //label posInList = quickSelect(pL, totalTranferLabelList[tTBLI], 0, pL.size()-1);
+	    //pointData& ptD = pL[posInList];
+	    pointData& ptD = pL[totalTranferLabelList[tTBLI]];
+	    ptD.currentPoint = totalTranferVectorList[tTBLI];
+	}
+
+	// updating the eL
+	forAll(bDataL_,bDI)
+	{
+            DynamicList<pointData>& pL = bDataL_[bDI].pL;
+            DynamicList<elementInfo>& eL = bDataL_[bDI].eL;
+	    pointToElementMapping(pL,eL);
+	}
+
+	totalTranferLabelList.clearStorage();
+	totalTranferVectorList.clearStorage();
+	myTranferLabelList.clearStorage();
+	myTranferPointList.clearStorage();
+    }//2
+
+    if (!Pstream::parRun())
+    {//3
+	forAllIter(typename CloudType, this->owner(), iter1)
+	{
+	    parcelType& p1 = iter1();
+
+            label bubbleDI = p1.bubbleIndex();
+            label pointDI = p1.currentIndex();
+
+            DynamicList<pointData>& pL = bDataL_[bubbleDI].pL;
+	    //label posInList = quickSelect(pL, pointDI, 0, pL.size()-1);
+	    //pointData& ptD = pL[posInList];
+	    pointData& ptD = pL[pointDI];
+
+	    ptD.currentPoint = p1.shadowPos();
+	}
+
+	// updating the eL
+	forAll(bDataL_,bDI)
+	{
+            DynamicList<pointData>& pL = bDataL_[bDI].pL;
+            DynamicList<elementInfo>& eL = bDataL_[bDI].eL;
+	    pointToElementMapping(pL,eL);
+	}
+    }//3
+}
+
+//--------------------------------------------------------------------------
+//-----------------------------quickSelect----------------------------------
+//--------------------------------------------------------------------------
+// quichSelect func is used to find positon of any member in
+// DynamicList<elementData> with currentIndex.
+template<class CloudType>
+template <class T>
+inline Foam::label Foam::FrontDynamic<CloudType>::quickSelect(const DynamicList<T>& S, const label k, label startI, label endI)
+{
+    scalar rand = ranGen_.scalar01();
+    label pivot = startI + label( rand * ( endI - startI) );
+
+    if( S[pivot].currentIndex < k )
+    {
+        startI = pivot + 1;
+        return quickSelect(S,k, startI, endI);
+    }
+    else if ( S[pivot].currentIndex > k )
+    {
+        endI   = pivot -1;
+        return quickSelect(S,k, startI, endI);
+    }
+    else
+    {
+        return pivot;
+    }
+}
+
+//--------------------------------------------------------------------------
+//-----------------------------makingBubblesAtTheZeroTime--------------------------------------
+//--------------------------------------------------------------------------
+//note: func to read the all bubble front mesh.
+template<class CloudType>
+inline void Foam::FrontDynamic<CloudType>::makingBubblesAtTheZeroTime()
+{
+    fileName infileName = initialMakingFileOfTheBubbles_;
+
+    // This is the directory keeping the bubble data.
+    fileName FTResult = "FTResult";
+
+    fileName InfileNamePath =  this->owner().db().time().rootPath()/this->owner().db().time().globalCaseName()/FTResult/infileName;
+
+    IFstream inFile(InfileNamePath);
+
+    label bubbleNum;
+    scalar radin;
+    label nps;
+    scalar xc, yc, zc, e;// bubble centre
+    scalar outerFluidDensity, density, outerFluidViscosity, viscosity;// bubble properties
+    scalar sigma;// surface tension coeff
+    scalar Eotvos;// Eotvos number for the current bubble
+    scalar Morton;// Morton number for the current bubble
+
+    pointData ptI; //tempoaray pointData var
+    elementInfo elI; //tempoaray elementInfo var
+
+    string line = getLineNoComment(inFile);
+    IStringStream lineStream(line);
+    lineStream >> bubbleNum;
+
+    Info << "\n   *Bubble construction process ....." << endl;
+    Info << "\n       The total number of bubbles is " << bubbleNum << endl;
+
+    List<fileName> printAllbubbles(bubbleNum);
+    forAll(printAllbubbles,pAB)
+    {
+        // note, this way is for intrinsic C++ utility
+	//std::ostringstream oss;
+	//oss << "b" << pAB << ".plt";
+	//printAllbubbles[pAB] = oss.str();
+
+        // note, this way is special for OpenFOAM using the OStringStream object
+        OStringStream oss;
+	oss << "bubble" << pAB << "_AtZeroTime" << ".plt";
+        fileName fName = oss.str();
+	printAllbubbles[pAB] =  this->owner().db().time().rootPath()/this->owner().db().time().globalCaseName()/FTResult/fName;
+    }
+
+    for(int bI = 0; bI < bubbleNum ; bI++)
+    {//0
+        bubbleData bData;
+        DynamicList<pointData>& pL = bData.pL;
+        DynamicList<elementInfo>& eL = bData.eL;
+
+        pL.reserve( 100000);//JJ
+        eL.reserve( 200000);//JJ
+
+        string line = getLineNoComment(inFile);
+        {
+           IStringStream lineStream(line);
+           lineStream >> radin >> nps >> xc >> yc >> zc >> e
+                      >> outerFluidDensity >> density
+                      >> outerFluidViscosity >> viscosity
+                      >> sigma >> Eotvos >> Morton;
+        }
+
+        bData.outerFluidDensity = outerFluidDensity;
+        bData.density = density;
+        bData.outerFluidViscosity = outerFluidViscosity;
+        bData.viscosity = viscosity;
+        bData.sphereBubbleDiameter = 2.0 * radin;
+        bData.surfaceTensionCoeff = sigma;
+        bData.EotvosNumber = Eotvos;
+        bData.MortonNumber = Morton;
+
+        if( frontMeshInputOption_ == "roughlyCalculated")
+        {
+           scalar frontMeshLengthScale = 0;
+           nps = 0;
+           do
+           {
+               nps = nps + 1;
+               scalar bubbleSurfArea = 4.0 * mathematical::pi * pow(radin, 2.0);
+               frontMeshLengthScale = pow( 2 * bubbleSurfArea/ ( 2*nps+2*nps*(nps-1)+2*nps*nps*(4-1)), 0.5);
+           } while( 0.5*(maxEdge_+minEdge_) > frontMeshLengthScale || frontMeshLengthScale > 0.95*maxEdge_ );
+           Info << "       *The front mesh LengthScale is calculated as " << frontMeshLengthScale << endl;
+        }
+        else if( frontMeshInputOption_ == "finerCalculated" || frontMeshInputOption_ == "manually" )
+        {
+           scalar frontMeshLengthScale = 0;
+           nps = 0;
+           do
+           {
+               nps = nps + 1;
+               scalar bubbleSurfArea = 4.0 * mathematical::pi * pow(radin, 2.0);
+               frontMeshLengthScale = pow( 2 * bubbleSurfArea/ ( 2*nps+2*nps*(nps-1)+2*nps*nps*(4-1)), 0.5);
+           } while( minEdge_ > frontMeshLengthScale || frontMeshLengthScale > (1.0+howFinner_)*minEdge_ );
+           Info << "       *The front mesh LengthScale is calculated as " << frontMeshLengthScale << endl;
+        }
+
+        scalar dph = mathematical::piByTwo/double(nps);
+        label nptot = 2+(4-1)*nps*nps+(nps-1)*nps+nps;
+        label netot = 2*nps+2*nps*(nps-1)+2*nps*nps*(4-1);
+
+        Info << "\n       The bubble number " << bI << " is constructed from : " << ' ' << infileName << ' '
+             << " with radin/nps/bubblepos/e  as : " << ' ' << radin << ' '
+             << nps << ' ' << xc << ' ' << yc << ' '
+             << zc  << token::SPACE << e  << token::SPACE << endl;
+
+         Info << "            the outer fluid and bubble densities are : "
+              << bData.outerFluidDensity << ' ' << bData.density << endl;
+
+         Info << "            the outer fluid and bubble viscosities are : "
+              << bData.outerFluidViscosity << ' ' << bData.viscosity << endl;
+
+         Info << "            the number of point/element for this bubble is : " << ' ' << nptot << ' '
+              << netot << ' ' << endl;
+
+       //cccccccccccccccccccccccccccccccccccccccccccccccccccccc
+       //c ee is nonzero to create deformed bubbles
+            scalar ee = e;
+
+       //cccccccccccccccccccccccccccccccccccccccccccccccccccccc
+       //c set north and south pole----CHECK
+       scalar rad = radin-ee;
+
+       scalar x = xc;
+       scalar y = yc;
+       scalar z = zc - rad;
+       ptI.currentPoint = point(x, y, z);
+       ptI.posInDomain = ptI.currentPoint;
+       ptI.currentIndex = 0;
+       ptI.keepPoint = true;
+       pL.append(ptI);
+
+       x = xc;
+       y = yc;
+       z = zc + rad;
+       ptI.currentPoint = point(x, y, z);
+       ptI.posInDomain = ptI.currentPoint;
+       ptI.currentIndex = 1;
+       ptI.keepPoint = true;
+       pL.append(ptI);
+
+       for(int iq = 1; iq <= 4 ; iq++)
+       {//1
+         for(int i2 = 1; i2 <= nps ; i2++)
+         {//2
+           for(int i1 = 1; i1 <= nps ; i1++)
+           {//3
+
+	       label iip = 2+(iq-1)*nps*nps+(i2-1)*nps+i1;
+	       scalar phi = dph*double(i1-i2);
+	       label ist = i2-1;
+	       if( (i1-i2) < 0)
+               {
+                 ist=i1-1;
+               }
+	       scalar theta = mathematical::piByTwo*( double(iq-1) + double(ist)/( double(nps-abs(i1-i2)) + ROOTVSMALL ) );
+	       rad=radin+ee*cos(2.0*phi);
+
+	       x = xc + rad*cos(phi)*cos(theta);
+	       y = yc + rad*cos(phi)*sin(theta);
+	       z = zc - rad*sin(phi);
+	       ptI.currentPoint = point(x, y, z);
+               ptI.posInDomain = ptI.currentPoint;
+	       ptI.currentIndex = iip - 1;
+	       ptI.keepPoint = true;
+	       pL.append(ptI);
+
+	       label iie=2*i1+2*nps*(i2-1)+2*nps*nps*(iq-1);
+	       label ia=iip;
+	       label ib=iip+nps;
+	       label ic=ib+1;
+	       label id=ia+1;
+
+	       label iqq=0;
+
+	       if(i1 == nps)
+               {
+	           iqq=iq;
+	           if(iqq == 4)
+                   {
+                      iqq=0;
+                   }
+		   ic=2+iqq*nps*nps+nps+1-i2;
+		   id=ic+1;
+	       }
+
+	       if(i2 == nps)
+               {
+	           iqq=iq;
+	           if(iqq == 4)
+                   {
+                      iqq=0;
+                   }
+		   ib=2+iqq*nps*nps+(nps+1-i1)*nps+1;
+		   ic=ib-nps;
+	       }
+
+	       if((i1 == nps) && (i2 == 1))
+               {
+                  id=1;
+               }
+
+	       if((i2 == nps) && (i1 == 1))
+               {
+                  ib=2;
+               }
+
+	       elI.keepElement = true;
+	       elI.currentIndex = iie-2;
+	       elI.pointIndex[0] = ia-1;
+	       elI.pointIndex[1] = ic-1;
+	       elI.pointIndex[2] = ib-1;
+	       eL.append(elI);
+
+	       elI.keepElement = true;
+	       elI.currentIndex = iie-1;
+	       elI.pointIndex[0] = ia-1;
+	       elI.pointIndex[1] = id-1;
+	       elI.pointIndex[2] = ic-1;
+	       eL.append(elI);
+
+            }//3
+          }//2
+        }//1
+
+        startPtIndexFromZero(pL,eL);
+        findNighboures(pL,eL);
+	    pointToElementMapping(pL,eL);
+	    ptConnectedPoints(pL,eL);
+        printInitialFronts(printAllbubbles[bI], pL, eL);
+        initialBubbleVolume_ = calcBubbleVolume(eL);//it's new
+        bDataL_.append(bData);
+    }//0
+    initialAllocatingTheCPTList();
+    allCellsInEeachMasket_.setSize(bDataL_.size());
+  //allCellsNearEeachFront_.setSize(bDataL_.size());
+    setLengthScalesNearTheFront();
+}
+
+//--------------------------------------------------------------------------
+//-----------------------------findNighboures-------------------------------
+//--------------------------------------------------------------------------
+template<class CloudType>
+inline void Foam::FrontDynamic<CloudType>::findNighboures(DynamicList<pointData>& pL, DynamicList<elementInfo>& eL)
+{
+    forAll(eL , fI)
+    {//1
+        elementInfo& elfI = eL[fI];
+        elfI.elementIndex[0] = -1;//JJ
+        elfI.elementIndex[1] = -1;//JJ
+        elfI.elementIndex[2] = -1;//JJ
+
+        label pfI = elfI.pointIndex[0];
+        label pfII = elfI.pointIndex[1];
+        label pfIII = elfI.pointIndex[2];
+
+        forAll(eL , sI)
+        {//2
+            elementInfo elsI = eL[sI];
+
+            label psI = elsI.pointIndex[0];
+            label psII = elsI.pointIndex[1];
+            label psIII = elsI.pointIndex[2];
+
+            if( sI != fI)
+            {
+                if(  (psII == pfI && psI == pfII) || (psIII == pfI && psII == pfII) || (psI == pfI && psIII == pfII)  )
+                {
+                    elfI.elementIndex[0] = elsI.currentIndex;
+                }
+                if(  (psII == pfII && psI == pfIII) || (psIII == pfII && psII == pfIII) || (psI == pfII && psIII == pfIII)  )
+                {
+                    elfI.elementIndex[1] = elsI.currentIndex;
+                }
+                if(  (psII == pfIII && psI == pfI) || (psIII == pfIII && psII == pfI) || (psI == pfIII && psIII == pfI)  )
+                {
+                    elfI.elementIndex[2] = elsI.currentIndex;
+                }
+            }
+        }//2
+    }//1
+}
+//--------------------------------------------------------------------------
+//-----------------------------pointToElementMapping---------------------------
+//--------------------------------------------------------------------------
+// note: func to find connected points of each point in pL.
+template<class CloudType>
+inline void Foam::FrontDynamic<CloudType>::pointToElementMapping(DynamicList<pointData>& pL, DynamicList<elementInfo>& eL)
+{
+    forAll(eL, II)
+    {//4
+        elementInfo& elI = eL[II];
+
+        label p0 = elI.pointIndex[0];
+        label p1 = elI.pointIndex[1];
+        label p2 = elI.pointIndex[2];
+
+        elI.points[0] = pL[p0].currentPoint;
+        elI.points[1] = pL[p1].currentPoint;
+        elI.points[2] = pL[p2].currentPoint;
+
+        pL[p0].elOwner = elI.currentIndex;
+        pL[p1].elOwner = elI.currentIndex;
+        pL[p2].elOwner = elI.currentIndex;
+    }//4
+}
+//--------------------------------------------------------------------------
+//-----------------------------ptConnectedPoints---------------------------
+//--------------------------------------------------------------------------
+// note: func to find connected points of each point in pL.
+template<class CloudType>
+inline void Foam::FrontDynamic<CloudType>::ptConnectedPoints( DynamicList<pointData>& pL, DynamicList<elementInfo>& eL)
+{
+    label posInList;
+    label f, cNI, cNII, cNIII;
+    label curPI, firstPI;
+
+    forAll(pL, I)
+    {//1
+        pointData& currentPt = pL[I];
+        DynamicList<point>& cPoints = currentPt.connectedPoints;
+        DynamicList<label>& cPointsIndex = currentPt.connectedPointsIndex;
+
+        cPoints.clear();
+        cPointsIndex.clear();
+        //cPoints.clearStorage();//JJ
+        //cPointsIndex.clearStorage();//JJ
+
+        curPI = currentPt.currentIndex;
+        elementInfo elTemp = eL[currentPt.elOwner];
+
+        for( f=0; f<=3; f++)
+        {
+            if( elTemp.pointIndex[f] == curPI )
+            {
+                break;
+            }
+            if( f == 3)
+            {
+		FatalErrorIn( " ^^^^^^^^^^^^^ we can not find such a point, curPI.") << abort(FatalError);
+            }
+        }
+        findPointsOrder( f, cNI, cNII, cNIII );
+
+        firstPI = elTemp.pointIndex[cNII];
+        cPoints.append( elTemp.points[cNII]);
+        cPointsIndex.append( elTemp.pointIndex[cNII]);
+
+        label counter = 0;
+        do
+        {
+            elTemp = eL[elTemp.elementIndex[cNIII]];
+
+            for( f=0; f<=3; f++)
+            {
+                if( elTemp.pointIndex[f] == curPI )
+                {
+                    break;
+                }
+                if( f == 3)
+                {
+		    FatalErrorIn( " ^^^^^^^^^^^^^ we can not find such a point, curPI.") << abort(FatalError);
+                }
+            }
+            findPointsOrder(f, cNI, cNII, cNIII );
+
+            cPoints.append( elTemp.points[cNII]);
+            cPointsIndex.append( elTemp.pointIndex[cNII]);
+
+            counter++;
+            if( counter > 100)
+            {
+		FatalErrorIn( " >>>>>>>>>>>>   Sorry, some thing are going to be wrong with You !!!! ")
+                << "\n point index is: " << curPI
+                << "\n el owner is: " << currentPt.elOwner
+                << "\n el owner neighboures: " << eL[currentPt.elOwner].elementIndex[0] << ' '
+                                               << eL[currentPt.elOwner].elementIndex[1] << ' '
+                                               << eL[currentPt.elOwner].elementIndex[2] << abort(FatalError);
+            }
+        }while( elTemp.pointIndex[cNIII] != firstPI );
+    }//1
+}
+
+//--------------------------------------------------------------------------
+//-----------------------------printInitialFronts---------------------------
+//--------------------------------------------------------------------------
+//--------------THIS IS NOT ACCEBTABLE FIX THE WAY IT WRITES TO FILE--------
+//- note : func to print the front mesh in .plt format
+//- there is an important point that the number
+//- of points should be strated from 1  in plt format
+template<class CloudType>
+inline void Foam::FrontDynamic<CloudType>::printInitialFronts(const fileName& outfileName, DynamicList<pointData> pL, DynamicList<elementInfo> eL)
+{
+    ofstream outFile(outfileName.c_str(), ios::out);
+    ostream& os = outFile;
+
+    // Write header
+    os  << " VARIABLES = \"X\" \"Y\" \"Z\",\"NUM\" "
+	<< "\n ZONE T=\"Bubble\" "
+	<< "\n N=        " << pL.size()
+	<< " E=        " << eL.size()
+	<< " ZONETYPE=FETriangle"
+	<< "\n DATAPACKING=POINT \n";
+
+    // Write vertex coords
+    forAll(pL, pI)
+    {
+        vector curPoint = pL[pI].currentPoint;
+	os  << curPoint.x() << token::SPACE
+	    << curPoint.y() << token::SPACE
+	    << curPoint.z() << token::SPACE << 1 << " \n";
+    }
+
+    forAll(eL, eI)
+    {
+	 os  << eL[eI].pointIndex[0]+1 << token::SPACE
+	     << eL[eI].pointIndex[1]+1 << token::SPACE
+	     << eL[eI].pointIndex[2]+1 << token::SPACE << " \n";
+    }
+
+    outFile.close();
+}
+
+
+
+
+
+
+
+
+//--------------------------------------------------------------------------
+//-----------------------------readInitialBubbles---------------------------
+//--------------------------------------------------------------------------
 template<class CloudType>
 void Foam::FrontDynamic<CloudType>::readInitialBubbles()
 {

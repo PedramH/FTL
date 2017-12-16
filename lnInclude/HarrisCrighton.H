@@ -1,1 +1,1 @@
-../backup/submodels/MPPIC/ParticleStressModels/HarrisCrighton/HarrisCrighton.H
+../submodels/MPPIC/ParticleStressModels/HarrisCrighton/HarrisCrighton.H

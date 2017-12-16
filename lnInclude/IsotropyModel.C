@@ -1,1 +1,1 @@
-../backup/submodels/MPPIC/IsotropyModels/IsotropyModel/IsotropyModel.C
+../submodels/MPPIC/IsotropyModels/IsotropyModel/IsotropyModel.C

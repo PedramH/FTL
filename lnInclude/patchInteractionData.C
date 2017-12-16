@@ -1,1 +1,1 @@
-../backup/submodels/Kinematic/PatchInteractionModel/LocalInteraction/patchInteractionData.C
+../submodels/Kinematic/PatchInteractionModel/LocalInteraction/patchInteractionData.C

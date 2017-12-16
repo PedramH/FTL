@@ -19,5 +19,4 @@ IntegrationScheme/makeIntegrationSchemes.dep\
 phaseProperties/phaseProperties/phaseProperties.dep\
 phaseProperties/phaseProperties/phasePropertiesIO.dep\
 phaseProperties/phasePropertiesList/phasePropertiesList.dep\
-clouds/Templates/KinematicCloud/cloudSolution/cloudSolution.dep\
-submodels/MPPIC/AveragingMethods/makeAveragingMethods.dep
+clouds/Templates/KinematicCloud/cloudSolution/cloudSolution.dep

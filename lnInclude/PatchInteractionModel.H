@@ -1,1 +1,1 @@
-../backup/submodels/Kinematic/PatchInteractionModel/PatchInteractionModel/PatchInteractionModel.H
+../submodels/Kinematic/PatchInteractionModel/PatchInteractionModel/PatchInteractionModel.H

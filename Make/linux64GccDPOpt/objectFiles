@@ -19,5 +19,4 @@ $(OBJECTS_DIR)/makeIntegrationSchemes.o\
 $(OBJECTS_DIR)/phaseProperties.o\
 $(OBJECTS_DIR)/phasePropertiesIO.o\
 $(OBJECTS_DIR)/phasePropertiesList.o\
-$(OBJECTS_DIR)/cloudSolution.o\
-$(OBJECTS_DIR)/makeAveragingMethods.o
+$(OBJECTS_DIR)/cloudSolution.o

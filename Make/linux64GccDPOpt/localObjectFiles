@@ -19,5 +19,4 @@ makeIntegrationSchemes.o\
 phaseProperties.o\
 phasePropertiesIO.o\
 phasePropertiesList.o\
-cloudSolution.o\
-makeAveragingMethods.o
+cloudSolution.o

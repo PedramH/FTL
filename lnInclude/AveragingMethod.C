@@ -1,1 +1,1 @@
-../backup/submodels/MPPIC/AveragingMethods/AveragingMethod/AveragingMethod.C
+../submodels/MPPIC/AveragingMethods/AveragingMethod/AveragingMethod.C

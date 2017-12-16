@@ -1,1 +1,1 @@
-../backup/submodels/MPPIC/AveragingMethods/Dual/Dual.C
+../submodels/MPPIC/AveragingMethods/Dual/Dual.C

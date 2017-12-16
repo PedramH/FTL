@@ -64,7 +64,7 @@ clouds/Templates/KinematicCloud/cloudSolution/cloudSolution.C
 
 
 /* averaging methods */
-submodels/MPPIC/AveragingMethods/makeAveragingMethods.C
+/* submodels/MPPIC/AveragingMethods/makeAveragingMethods.C */
 
 
 LIB = $(FOAM_USER_LIBBIN)/liblagrangianIntermediateFTLaminarPedram

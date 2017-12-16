@@ -1,1 +1,1 @@
-../backup/submodels/MPPIC/TimeScaleModels/equilibrium/equilibrium.C
+../submodels/MPPIC/TimeScaleModels/equilibrium/equilibrium.C

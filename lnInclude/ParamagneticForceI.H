@@ -1,1 +1,1 @@
-../backup/submodels/Kinematic/ParticleForces/Paramagnetic/ParamagneticForceI.H
+../submodels/Kinematic/ParticleForces/Paramagnetic/ParamagneticForceI.H

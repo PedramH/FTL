@@ -1,1 +1,1 @@
-../backup/submodels/Kinematic/ParticleForces/Lift/LiftForce/LiftForceI.H
+../submodels/Kinematic/ParticleForces/Lift/LiftForce/LiftForceI.H
